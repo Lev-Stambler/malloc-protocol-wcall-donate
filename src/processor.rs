@@ -16,6 +16,7 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
+    msg!("Number of inputed accounts is {}", accounts.len());
     let account_info_iter = &mut accounts.iter();
     let prog_account = account_info_iter
         .next()
@@ -32,14 +33,22 @@ pub fn process_instruction(
 }
 
 // do literally anything
-fn go_nuts(prog_id: &Pubkey, accounts: &[AccountInfo]) -> Result<(), ProgError> {
+fn go_nuts(prog_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let split_balance = get_split_balance(&accounts[1].data.borrow())?;
+    let account_info_iter = &mut accounts.iter();
+    let prog_account = account_info_iter
+        .next()
+        .ok_or(ProgramError::NotEnoughAccountKeys)?;
+
     transfer(
         split_balance,
         prog_id,
         &[
+            // source
             accounts[1].to_owned(),
+            // destination
             accounts[2].to_owned(),
+            // owner
             accounts[0].to_owned(),
         ],
     )
