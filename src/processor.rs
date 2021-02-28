@@ -16,7 +16,6 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
-    msg!("Number of inputed accounts is {}", accounts.len());
     let account_info_iter = &mut accounts.iter();
     let prog_account = account_info_iter
         .next()
@@ -44,12 +43,14 @@ fn go_nuts(prog_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
         split_balance,
         prog_id,
         &[
-            // source
-            accounts[1].to_owned(),
-            // destination
+            // spl_account
             accounts[2].to_owned(),
-            // owner
-            accounts[0].to_owned(),
+            // source (i.e. Malloc Input account)
+            accounts[1].to_owned(),
+            // destination (passed in as an associated to this WCall)
+            accounts[4].to_owned(),
+            // ephemeral "split" account
+            accounts[3].to_owned(),
         ],
     )
     .map_err(|e| {

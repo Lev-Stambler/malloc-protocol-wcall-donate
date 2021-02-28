@@ -15,7 +15,7 @@ use solana_program::{
     account_info::AccountInfo,
     instruction::{AccountMeta, Instruction},
     msg,
-    program::invoke_signed,
+    program::{invoke_signed, invoke},
     program_error::ProgramError,
     program_pack::Pack,
     pubkey::Pubkey,
@@ -32,39 +32,51 @@ pub const MALLOC_PROG_ID: &'static str = "ma11ocdevdevdevdevdevdevdevdevdevdevde
 solana_program::declare_id!("ma11ocwca1111111111111111111111111111111111");
 
 /// call "Transfer" for SPL token
-/// three account infos: source, destination, signer (delegate / owner)
+/// four account infos: SPL token, source, destination, signer (delegate / owner)
 pub fn transfer(
     amount: u64,
     prog_id: &Pubkey,
     account_infos: &[AccountInfo],
 ) -> Result<(), ProgError> {
-    let wcall_pubkey = Pubkey::create_program_address(&[WCALL_SEED], prog_id).map_err(|e| {
-        msg!("error finding program-derived address!");
-        ProgError::ProgDerivedAddrError
-    })?;
+    //let wcall_pubkey = Pubkey::create_program_address(&[WCALL_SEED], prog_id).map_err(|e| {
+       // msg!("error finding program-derived address!");
+        //ProgError::ProgDerivedAddrError
+    //})?;
 
+//pub fn transfer(
+//    token_program_id: &Pubkey, 
+//    source_pubkey: &Pubkey, 
+//    destination_pubkey: &Pubkey, 
+//    authority_pubkey: &Pubkey, 
+//    signer_pubkeys: &[&Pubkey], 
+//    amount: u64
+//) -> Result<Instruction, ProgramError>
     let insn = spl_transfer(
         &Pubkey::from_str(TOKEN_PROG_ID).unwrap(),
-        &account_infos[0].key,
         &account_infos[1].key,
-        &wcall_pubkey,
-        &[&wcall_pubkey],
+        &account_infos[2].key,
+        &account_infos[3].key,
+        &[&account_infos[3].key],
         amount,
     )
     .map_err(|e| {
         msg!("error constructing SPL transfer: {}", e);
         ProgError::TransferError
     })?;
-    invoke_signed(&insn, account_infos, &[&[WCALL_SEED]]).map_err(|e| {
+    invoke(&insn, account_infos).map_err(|e| {
         msg!("error in SPL transfer: {}", e);
         ProgError::TransferError
     })?;
+  //  invoke_signed(&insn, account_infos, &[&[WCALL_SEED]]).map_err(|e| {
+  //      msg!("error in SPL transfer: {}", e);
+  //      ProgError::TransferError
+  //  })?;
 
     Ok(())
 }
 
 /// call "Approve" for SPL token
-/// three account infos: source, delegate, owner of source
+/// four account infos: SPL Program, source, delegate, owner of source
 pub fn approve(
     amount: u64,
     prog_id: &Pubkey,
@@ -76,8 +88,8 @@ pub fn approve(
     })?;
     let insn = spl_approve(
         &Pubkey::from_str(TOKEN_PROG_ID).unwrap(),
-        &account_infos[0].key,
         &account_infos[1].key,
+        &account_infos[2].key,
         &wcall_pubkey,
         &[&wcall_pubkey],
         amount,
@@ -87,7 +99,7 @@ pub fn approve(
         ProgError::ApproveError
     })?;
 
-    invoke_signed(&insn, account_infos, &[&[WCALL_SEED]]).map_err(|e| {
+    invoke(&insn, account_infos).map_err(|e| {
         msg!("error in SPL approve: {}", e);
         ProgError::ApproveError
     })?;
