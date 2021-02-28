@@ -14,7 +14,7 @@ use solana_program::{
 pub fn process_instruction(
     _program_id: &Pubkey,
     accounts: &[AccountInfo],
-    input: &[u8],
+    mut input: &[u8],
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let prog_account = account_info_iter
@@ -23,7 +23,7 @@ pub fn process_instruction(
 
     let prog_id = prog_account.key;
 
-    let _ = go_nuts(prog_id, accounts).map_err(|e| {
+    let _ = go_nuts(prog_id, accounts, input).map_err(|e| {
         msg!("failed to go_nuts: {}", e);
         ProgramError::Custom(2)
     })?;
@@ -32,8 +32,9 @@ pub fn process_instruction(
 }
 
 // do literally anything
-fn go_nuts(prog_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let split_balance = get_split_balance(&accounts[1].data.borrow())?;
+fn go_nuts(prog_id: &Pubkey, accounts: &[AccountInfo], mut input: &[u8]) -> ProgramResult {
+    let split_balance = get_split_balance(input)?;
+    msg!("Split balance of {}", split_balance);
     let account_info_iter = &mut accounts.iter();
     let prog_account = account_info_iter
         .next()

@@ -8,6 +8,8 @@ pub mod processor;
 
 // Export current sdk types for downstream users building with a different sdk version
 use core::str::FromStr;
+use std::io::Cursor;
+use byteorder::{BigEndian, ReadBytesExt};
 use error::ProgError;
 use serde::{Deserialize, Serialize};
 pub use solana_program;
@@ -107,10 +109,18 @@ pub fn approve(
     Ok(())
 }
 
-pub fn get_split_balance(split_account_data: &[u8]) -> Result<u64, ProgError> {
-    let state = Account::unpack_from_slice(split_account_data).map_err(|e| {
-        msg!("falid to unpack split account data: {}", e);
-        ProgError::InvalidState
-    })?;
-    Ok(state.amount)
+pub fn get_split_balance(input: &[u8]) -> Result<u64, ProgError> {
+    let inp_trimmed = &input[8..];
+    let mut rdr = Cursor::new(inp_trimmed);
+
+    msg!("input data of {:?}", input);
+    let val = rdr.read_u64::<BigEndian>().unwrap();
+    // TODO: Ghetto and unsafe!!
+    Ok(val)
+    //let state = Account::unpack_from_slice(split_account_data).map_err(|e| {
+    //    msg!("falid to unpack split account data: {}", e);
+    //    ProgError::InvalidState
+    //})?;
+    //msg!("Amount of {}", state.amount);
+    //Ok(state.delegated_amount)
 }
